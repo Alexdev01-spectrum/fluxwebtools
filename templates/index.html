@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ALEXDEV — Bomb Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:          #07070f;
+    --s1:          #0d0d1e;
+    --s2:          #121228;
+    --s3:          #181835;
+    --border:      #1e1e40;
+    --border2:     #2a2a55;
+    --cyan:        #00e5ff;
+    --cyan-dim:    rgba(0,229,255,.12);
+    --cyan-glow:   rgba(0,229,255,.3);
+    --purple:      #9333ea;
+    --purple-dim:  rgba(147,51,234,.12);
+    --purple-glow: rgba(147,51,234,.35);
+    --green:       #22c55e;
+    --green-dim:   rgba(34,197,94,.12);
+    --red:         #ef4444;
+    --red-dim:     rgba(239,68,68,.1);
+    --amber:       #f59e0b;
+    --amber-dim:   rgba(245,158,11,.12);
+    --text:        #dde0f0;
+    --text-dim:    #8888aa;
+    --text-muted:  #44445a;
+    --mono:        'JetBrains Mono', monospace;
+    --sans:        'Inter', sans-serif;
+    --r:           6px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    overflow-x: hidden;
+  }
+
+  .bg-grid {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    animation: gridDrift 25s linear infinite;
+  }
+  @keyframes gridDrift { to { background-position: 0 48px; } }
+
+  .bg-radial {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(147,51,234,.07) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 35% at 80% 90%, rgba(0,229,255,.06) 0%, transparent 70%);
+  }
+
+  .wrapper {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* ── header ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+    flex-wrap: wrap; gap: 16px;
+  }
+
+  .brand { display: flex; align-items: center; gap: 14px; }
+
+  .brand-hex {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-weight: 700; font-size: 16px;
+    color: #fff; letter-spacing: -1px;
+    box-shadow: 0 0 20px var(--purple-glow);
+  }
+
+  .brand-text h1 {
+    font-family: var(--mono); font-size: 18px; font-weight: 700;
+    letter-spacing: .12em; color: var(--text); text-transform: uppercase;
+  }
+  .brand-text h1 span { color: var(--cyan); }
+
+  .brand-text p {
+    font-size: 11px; color: var(--text-muted);
+    font-family: var(--mono); letter-spacing: .05em; margin-top: 2px;
+  }
+
+  .socials { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .social-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 14px;
+    background: var(--s2); border: 1px solid var(--border);
+    border-radius: var(--r); color: var(--text-dim);
+    font-family: var(--mono); font-size: 11px;
+    text-decoration: none; letter-spacing: .04em;
+    transition: all .2s;
+  }
+  .social-btn:hover {
+    border-color: var(--cyan); color: var(--cyan);
+    background: var(--cyan-dim); box-shadow: 0 0 10px var(--cyan-glow);
+  }
+  .social-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+  /* ── stats ── */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px; margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--s1); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 14px 12px; text-align: center;
+  }
+  .stat-card .stat-val {
+    font-family: var(--mono); font-size: 24px; font-weight: 700; line-height: 1;
+  }
+  .stat-card .stat-lbl {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--text-muted); margin-top: 5px;
+  }
+  .stat-card.total .stat-val { color: var(--cyan);   }
+  .stat-card.ok    .stat-val { color: var(--green);  }
+  .stat-card.fail  .stat-val { color: var(--red);    }
+  .stat-card.rate  .stat-val { color: var(--purple); }
+
+  /* ── main grid ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 20px; align-items: start;
+  }
+
+  /* ── card ── */
+  .card {
+    background: var(--s1); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+  .card-header {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    background: var(--s2);
+  }
+  .card-header .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--cyan); box-shadow: 0 0 8px var(--cyan);
+  }
+  .card-header h2 {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: .15em; text-transform: uppercase; color: var(--text-dim);
+  }
+  .card-body { padding: 20px; }
+
+  /* ── form ── */
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block; font-family: var(--mono); font-size: 10px;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 7px;
+  }
+  .field input[type="text"],
+  .field input[type="number"] {
+    width: 100%; padding: 11px 14px;
+    background: var(--s2); border: 1px solid var(--border);
+    border-radius: var(--r); color: var(--text);
+    font-family: var(--mono); font-size: 14px;
+    outline: none; transition: border-color .2s, box-shadow .2s;
+  }
+  .field input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px var(--cyan-dim), 0 0 15px var(--cyan-dim);
+  }
+  .field input::placeholder { color: var(--text-muted); }
+
+  .rounds-row {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 12px; align-items: center;
+  }
+  .rounds-badge {
+    padding: 11px 16px; background: var(--s3);
+    border: 1px solid var(--border); border-radius: var(--r);
+    font-family: var(--mono); font-size: 13px;
+    color: var(--cyan); text-align: center; min-width: 52px;
+  }
+
+  /* ── detonate ── */
+  #detonateBtn {
+    width: 100%; margin-top: 8px; padding: 15px;
+    background: linear-gradient(135deg, #7c3aed, #0ea5e9);
+    border: none; border-radius: var(--r); color: #fff;
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    letter-spacing: .2em; text-transform: uppercase;
+    cursor: pointer; overflow: hidden;
+    transition: all .25s;
+    box-shadow: 0 4px 24px rgba(124,58,237,.4);
+  }
+  #detonateBtn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(124,58,237,.5), 0 0 20px rgba(14,165,233,.3);
+  }
+  #detonateBtn:active:not(:disabled) { transform: translateY(0); }
+  #detonateBtn:disabled {
+    opacity: .6; cursor: not-allowed;
+    background: linear-gradient(135deg, #4a2080, #0a5a7a);
+  }
+  #detonateBtn .btn-inner {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin .7s linear infinite; display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #abortBtn {
+    width: 100%; margin-top: 10px; padding: 10px;
+    background: transparent; border: 1px solid var(--red);
+    border-radius: var(--r); color: var(--red);
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase;
+    cursor: pointer; display: none; transition: all .2s;
+  }
+  #abortBtn:hover { background: var(--red-dim); box-shadow: 0 0 12px rgba(239,68,68,.2); }
+
+  .progress-wrap { margin-top: 16px; display: none; }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text-muted); margin-bottom: 6px; letter-spacing: .05em;
+  }
+  .progress-track {
+    width: 100%; height: 4px;
+    background: var(--s3); border-radius: 2px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--purple), var(--cyan));
+    border-radius: 2px; transition: width .4s ease;
+    box-shadow: 0 0 8px var(--cyan-glow);
+  }
+
+  /* ── service tiles ── */
+  .svc-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+  .svc-tile {
+    background: var(--s2); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 10px 12px;
+    display: flex; align-items: center; gap: 9px; transition: all .3s;
+  }
+  .svc-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    background: var(--text-muted); transition: background .3s, box-shadow .3s;
+  }
+  .svc-name {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    letter-spacing: .04em; color: var(--text-dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .svc-tile.firing .svc-dot {
+    background: var(--amber); box-shadow: 0 0 8px var(--amber);
+    animation: pulse-dot .5s ease-in-out infinite alternate;
+  }
+  .svc-tile.firing { border-color: rgba(245,158,11,.3); }
+  .svc-tile.firing .svc-name { color: var(--amber); }
+
+  .svc-tile.ok .svc-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .svc-tile.ok { border-color: rgba(34,197,94,.25); background: var(--green-dim); }
+  .svc-tile.ok .svc-name { color: var(--green); }
+
+  .svc-tile.fail .svc-dot { background: var(--red); }
+  .svc-tile.fail { border-color: rgba(239,68,68,.2); }
+  .svc-tile.fail .svc-name { color: var(--red); }
+
+  @keyframes pulse-dot {
+    from { transform: scale(1); }
+    to   { transform: scale(1.4); opacity: .7; }
+  }
+
+  /* ── log ── */
+  .log-wrap { margin-top: 20px; }
+  #logFeed {
+    background: #050508; border: 1px solid var(--border);
+    border-radius: var(--r); height: 240px; overflow-y: auto;
+    padding: 12px; font-family: var(--mono); font-size: 11.5px; line-height: 1.7;
+  }
+  #logFeed::-webkit-scrollbar { width: 4px; }
+  #logFeed::-webkit-scrollbar-track { background: transparent; }
+  #logFeed::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .log-entry { display: flex; gap: 10px; }
+  .log-ts   { color: var(--text-muted); flex-shrink: 0; }
+  .log-svc  { color: var(--cyan); min-width: 140px; flex-shrink: 0; }
+  .log-svc.r2 { color: #818cf8; }
+  .log-svc.r3 { color: #e879f9; }
+  .log-msg-ok   { color: var(--green); }
+  .log-msg-fail { color: var(--red); }
+  .log-idle { color: var(--text-muted); }
+
+  /* ── footer ── */
+  footer {
+    margin-top: 48px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+  }
+  footer p { font-family: var(--mono); font-size: 10px; color: var(--text-muted); letter-spacing: .06em; }
+  footer p span { color: var(--cyan); }
+  .status-pill {
+    display: flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 10px; color: var(--text-muted); letter-spacing: .05em;
+  }
+  .status-pill .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 6px var(--green);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+  @media (max-width: 800px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .svc-grid  { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-radial"></div>
+
+<div class="wrapper">
+
+  <header>
+    <div class="brand">
+      <div class="brand-hex">AX</div>
+      <div class="brand-text">
+        <h1>ALEX<span>DEV</span> BOMB TOOL</h1>
+        <p>Philippine OTP Flooder · 15 Services · v2.0</p>
+      </div>
+    </div>
+    <div class="socials">
+      <a class="social-btn" href="https://t.me/alexdevyuhhh" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.17 13.887l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.978.672z"/></svg>
+        @alexdevyuhhh
+      </a>
+      <a class="social-btn" href="https://www.facebook.com/alexdevyuhhh" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971H15.83c-1.491 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+        Alex Jhon Ponce
+      </a>
+    </div>
+  </header>
+
+  <div class="stats-row">
+    <div class="stat-card total"><div class="stat-val" id="statSent">0</div><div class="stat-lbl">Sent</div></div>
+    <div class="stat-card ok">   <div class="stat-val" id="statOk">0</div>  <div class="stat-lbl">Success</div></div>
+    <div class="stat-card fail"> <div class="stat-val" id="statFail">0</div> <div class="stat-lbl">Failed</div></div>
+    <div class="stat-card rate"> <div class="stat-val" id="statRate">—</div> <div class="stat-lbl">Rate</div></div>
+  </div>
+
+  <div class="main-grid">
+
+    <div class="card">
+      <div class="card-header"><div class="dot"></div><h2>Control Panel</h2></div>
+      <div class="card-body">
+
+        <div class="field">
+          <label>Target Number</label>
+          <input type="text" id="phoneInput" placeholder="09XXXXXXXXX" maxlength="13" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label>Rounds</label>
+          <div class="rounds-row">
+            <input type="range" id="roundsRange" min="1" max="50" value="1"
+              style="width:100%;accent-color:var(--cyan);" />
+            <div class="rounds-badge" id="roundsBadge">×1</div>
+          </div>
+        </div>
+
+        <button id="detonateBtn">
+          <div class="btn-inner">
+            <div class="spinner" id="spinner"></div>
+            <span id="btnLabel">⚡ DETONATE</span>
+          </div>
+        </button>
+
+        <button id="abortBtn">■ ABORT</button>
+
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-label">
+            <span id="progressText">Firing...</span>
+            <span id="progressPct">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="dot"></div><h2>Services — 15 Active</h2></div>
+        <div class="card-body">
+          <div class="svc-grid" id="svcGrid"></div>
+        </div>
+      </div>
+
+      <div class="log-wrap">
+        <div class="card">
+          <div class="card-header"><div class="dot"></div><h2>Live Log</h2></div>
+          <div class="card-body" style="padding:0">
+            <div id="logFeed">
+              <div class="log-entry"><span class="log-idle">// bench idle — enter a number and detonate</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <p>ALEXDEV BOMB TOOL — <span>Alex Jhon Ponce</span> — PH Numbers Only</p>
+    <div class="status-pill"><div class="live-dot"></div><span>BENCH ONLINE</span></div>
+  </footer>
+
+</div>
+
+<script>
+const SERVICES = [
+  'BOMB OTP','EZLOAN','XPRESS PH','ABENSON','EXCELLENT LENDING',
+  'BISTRO','BAYAD CENTER','LBC CONNECT','PICKUP COFFEE','HONEY LOAN',
+  'KUMU PH','S5.COM','CASHALO','MWELL','PEXX'
+];
+
+const grid = document.getElementById('svcGrid');
+SERVICES.forEach(name => {
+  const tile = document.createElement('div');
+  tile.className = 'svc-tile';
+  tile.id = 'svc-' + name.replace(/[^a-zA-Z0-9]/g, '_');
+  tile.innerHTML = `<div class="svc-dot"></div><div class="svc-name">${name}</div>`;
+  grid.appendChild(tile);
+});
+
+const roundsRange = document.getElementById('roundsRange');
+const roundsBadge = document.getElementById('roundsBadge');
+roundsRange.addEventListener('input', () => { roundsBadge.textContent = '×' + roundsRange.value; });
+
+let currentJobId = null, pollTimer = null, seenCount = 0;
+
+function resetTiles() {
+  SERVICES.forEach(name => {
+    const el = document.getElementById('svc-' + name.replace(/[^a-zA-Z0-9]/g, '_'));
+    if (el) el.className = 'svc-tile';
+  });
+}
+
+function setTile(name, state) {
+  const el = document.getElementById('svc-' + name.replace(/[^a-zA-Z0-9]/g, '_'));
+  if (el) el.className = 'svc-tile ' + state;
+}
+
+function appendLog(ts, svc, msg, ok, round) {
+  const feed = document.getElementById('logFeed');
+  const color = round <= 1 ? '' : round === 2 ? 'r2' : 'r3';
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML =
+    `<span class="log-ts">[${ts}]</span>` +
+    `<span class="log-svc ${color}">${svc}</span>` +
+    `<span class="${ok ? 'log-msg-ok' : 'log-msg-fail'}">${ok ? '✓' : '✗'} ${msg}</span>`;
+  feed.appendChild(entry);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function updateStats(success, fail) {
+  const sent = success + fail;
+  document.getElementById('statSent').textContent = sent;
+  document.getElementById('statOk').textContent   = success;
+  document.getElementById('statFail').textContent  = fail;
+  document.getElementById('statRate').textContent  = sent > 0 ? Math.round(success / sent * 100) + '%' : '—';
+}
+
+function setProgress(done, total) {
+  const pct = total > 0 ? Math.min(100, Math.round(done / total * 100)) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent  = pct + '%';
+  document.getElementById('progressText').textContent = `${done} / ${total} fired`;
+}
+
+function setRunning(yes) {
+  const btn = document.getElementById('detonateBtn');
+  const abort = document.getElementById('abortBtn');
+  const prog = document.getElementById('progressWrap');
+  const spinner = document.getElementById('spinner');
+  const label = document.getElementById('btnLabel');
+  btn.disabled = yes;
+  spinner.style.display = yes ? 'block' : 'none';
+  label.textContent = yes ? 'DETONATING...' : '⚡ DETONATE';
+  abort.style.display = yes ? 'block' : 'none';
+  prog.style.display  = yes ? 'block' : 'none';
+}
+
+function clearLog() { document.getElementById('logFeed').innerHTML = ''; }
+
+document.getElementById('detonateBtn').addEventListener('click', async () => {
+  const phone  = document.getElementById('phoneInput').value.trim();
+  const rounds = parseInt(roundsRange.value);
+  if (!phone) { document.getElementById('phoneInput').focus(); return; }
+
+  clearLog(); resetTiles(); seenCount = 0;
+  updateStats(0, 0); setProgress(0, 0); setRunning(true);
+
+  try {
+    const res  = await fetch('/api/bomb', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, rounds })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      appendLog('--:--:--', 'ERROR', data.error || 'Bad request', false, 1);
+      setRunning(false); return;
+    }
+    currentJobId = data.job_id;
+    pollTimer = setInterval(poll, 400);
+  } catch (e) {
+    appendLog('--:--:--', 'ERROR', 'Server unreachable', false, 1);
+    setRunning(false);
+  }
+});
+
+document.getElementById('abortBtn').addEventListener('click', async () => {
+  if (!currentJobId) return;
+  await fetch('/api/abort/' + currentJobId, { method: 'POST' });
+});
+
+async function poll() {
+  if (!currentJobId) return;
+  try {
+    const res  = await fetch('/api/status/' + currentJobId);
+    const job  = await res.json();
+    const results = job.results || [];
+
+    for (let i = seenCount; i < results.length; i++) {
+      const r = results[i];
+      setTile(r.service, 'firing');
+      appendLog(r.ts, r.service, r.message, r.success, r.round);
+      setTimeout(() => setTile(r.service, r.success ? 'ok' : 'fail'), 350);
+    }
+    seenCount = results.length;
+    updateStats(job.success, job.fail);
+    setProgress(seenCount, job.total || 1);
+
+    if (job.status === 'done' || job.status === 'aborted') {
+      clearInterval(pollTimer); pollTimer = null; currentJobId = null; setRunning(false);
+      const feed = document.getElementById('logFeed');
+      const fin  = document.createElement('div');
+      fin.className = 'log-entry';
+      const msg = job.status === 'aborted' ? '// aborted by operator' : '// run complete';
+      fin.innerHTML = `<span class="log-idle">${msg} — ${job.success} ok / ${job.fail} fail</span>`;
+      feed.appendChild(fin);
+      feed.scrollTop = feed.scrollHeight;
+    }
+  } catch (e) {
+    clearInterval(pollTimer); setRunning(false);
+  }
+}
+</script>
+</body>
+</html>
